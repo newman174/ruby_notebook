@@ -1,8 +1,8 @@
 class Cell
-  attr_accessor :type, :content, :hsh, :heading_level
+  attr_accessor :type, :content, :heading_level
 
   def initialize(content: '', type: 'markdown', heading_level: 0)
-    self.hsh = if type == 'code'
+    @cell_hash = if type == 'code'
                  make_code_cell(content: content)
                else
                  make_md_cell(content: content, heading_level: heading_level)

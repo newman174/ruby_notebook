@@ -1,3 +1,6 @@
+require '~/ruby_filetools/filetools'
+require_relative 'cell'
+
 class Notebook
   require 'json'
   include FileTools
@@ -8,7 +11,7 @@ class Notebook
     'Notebook'
   end
 
-  def blank_nb_hash
+  def self.blank_nb_hash
     { "cells" => [],
       "metadata" => {"kernelspec"=>{"display_name"=>"Ruby 3.0.1", "language"=>"ruby", "name"=>"ruby"}, "language_info"=>{"file_extension"=>".rb", "mimetype"=>"application/x-ruby", "name"=>"ruby", "version"=>"3.0.1"}, "orig_nbformat"=>4},
       "nbformat" => 4,
@@ -67,9 +70,11 @@ class Notebook
     self.title = title
     self.cells = nb_hash['cells']
     self.file_name = FileTools.fn_format(title)
+    add_title_cell unless title.nil?
   end
 
-  def add_cell(cell)
+  def add_cell(cell = Cell.new)
+    cell = Cell.new(content: cell) unless cell.class == Cell
     nb_hash['cells'].push(cell)
   end
 
@@ -79,6 +84,10 @@ class Notebook
 
   def push(cell)
     add_cell(cell)
+  end
+
+  def add_title_cell
+    add_cell(content: title, heading_level: 1)
   end
 
   def save(fname: file_name, dir: Dir.pwd)
@@ -100,5 +109,20 @@ class Notebook
   def to_s
     title
   end
+
+  def inspect
+    output = []
+    output << "Title: #{title}\n\n"
+    output << "Cells:"
+    cells.each_with_index do |cell, index| 
+      output << "#{index + 1}. #{cell.type.capitalize} Cell"
+      output << cell.content
+    end
+    output
+  end
 end
-Notebook.new
+
+nb = Notebook.new
+nb.add_cell('yo yo')
+nb.add_cell('what it do')
+puts nb.inspect

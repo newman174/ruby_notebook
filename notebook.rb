@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'pry'
 require '~/ruby_filetools/filetools'
 require '~/Documents/ruby_filetools/filetools'
 require_relative 'cell'
@@ -24,18 +25,20 @@ class Notebook
     'Notebook'
   end
 
-  # Open JSON nb file and return a Notebook object
+  # Open JSON Notebook file (.ipynb) and return a Notebook object
   def self.open(nb_json_file_name)
     nb_hash = File.open(nb_json_file_name) do |file|
       JSON.parse(file.read)
     end
-    new(file_name: nb_file_name, nb_hash: nb_hash)
+    new_nb = new(nb_hash: nb_hash).file_name
+    new_nb.file_name = nb_json_file_name
+    new_nb.cells = nb_json_file_name
   end
 
   attr_accessor :title, :cells, :file_name, :created
 
-  def initialize(title: 'New Notebook')
-    # @nb_hash = self.class::BLANK_NB_HASH
+  def initialize(title: 'New Notebook', nb_hash: self.class::BLANK_NB_HASH)
+    @nb_hash = nb_hash
     self.title = title
     self.cells = []
     self.file_name = FileTools.fn_format(title)
@@ -74,18 +77,6 @@ class Notebook
     add_cell(content: title, heading_level: 1)
   end
 
-  # def save(fname: file_name, dir: Dir.pwd)
-  #   unless fname.nil? || fname == ''
-  #     self.class.save(nb_hash, fname, dir: dir)
-  #     return
-  #   end
-  #   puts "Error: No file name set. Use `nb.file_name = 'file_name'`"
-  # end
-
-  def clear!
-    @nb_hash = self.class::BLANK_NB_HASH
-  end
-
   def size
     cells.size
   end
@@ -116,3 +107,4 @@ nb.push('yo yo')
 nb << 'what it done?'
 puts nb.inspect
 nb.save
+binding.pry

@@ -55,8 +55,8 @@ class Notebook
   end
 
   def title=(title)
-    self.my_metadata['title'] = title
-    @title = self.my_metadata['title']
+    my_metadata['title'] = title
+    @title = my_metadata['title']
   end
 
   def to_json(*_args)
@@ -79,7 +79,7 @@ class Notebook
 
   # Add a code cell to the notebook.
   def add_code_cell(cell = CodeCell.new)
-    cell = CodeCell.new(source: cell) unless cell.is_a?(NotebookCell)
+    cell = NotebookCell.new(source: cell) unless cell.is_a?(NotebookCell)
     cells << cell
     refresh_cells
   end
@@ -87,7 +87,11 @@ class Notebook
   # Add a markdown cell to the notebook.
   def add_markdown_cell(cell = '', heading_level = 0)
     unless cell.is_a?(NotebookCell)
-      cell = MarkdownCell.new(source: cell, heading_level: heading_level)
+      cell = NotebookCell.new(
+        source: cell,
+        cell_type: 'markdown',
+        heading_level:
+      )
     end
     cells << cell
     refresh_cells
@@ -98,7 +102,8 @@ class Notebook
   alias push add_markdown_cell
 
   def add_title_cell
-    add_markdown_cell(title, 1)
+    title_cell_source = "# #{title}"
+    add_markdown_cell(title_cell_source, 1)
   end
 
   def size

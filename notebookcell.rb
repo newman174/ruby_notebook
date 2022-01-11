@@ -1,25 +1,75 @@
 # frozen_string_literal: true
 
-# TODO: Work on sharpening the input types... string or array of strings? Done?
-
 # Cell for Jupyter Notebook
 class NotebookCell
   include Comparable
 
-  attr_accessor :cell_type, :source, :hash
+  attr_accessor :hash
 
-  def initialize(source: '', cell_type: 'code')
-    self.hash = make_cell_hash(source: source, cell_type: cell_type)
-    self.cell_type = hash['cell_type']
-    self.source = hash['source']
+  def initialize(source: '', cell_type: 'code', existing_hash: nil, heading_level: nil)
+    self.hash = existing_hash || make_cell_hash(source:, cell_type:)
+    self.heading_level = heading_level
   end
 
-  def make_cell_hash(source: '', cell_type: 'code')
+  def source
+    hash['source']
+  end
+
+  def source=(srce)
+    srce = [srce] unless srce.is_a?(Array)
+    hash['source'] = srce
+  end
+
+  def cell_type
+    hash['cell_type']
+  end
+
+  def cell_type=(type)
+    hash['cell_type'] = type
+  end
+
+  def metadata
+    hash['metadata']
+  end
+
+  def metadata=(data)
+    hash['metadata'] = data
+  end
+
+  def group
+    metadata['group']
+  end
+
+  def group=(grp)
+    metadata['group'] = grp
+  end
+
+  def id
+    metadata['id']
+  end
+
+  def id=(num)
+    metadata['id'] = num
+  end
+
+  def heading_level
+    metadata['heading_level']
+  end
+
+  def heading_level=(lvl)
+    metadata['heading_level'] = lvl
+  end
+
+  def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
     source = [source] unless source.is_a?(Array)
 
     { 'cell_type' => cell_type,
       'execution_count' => 0,
-      'metadata' => {},
+      'metadata' => {
+        'group' => nil,
+        'id' => nil,
+        'heading_level' => heading_level
+      },
       'outputs' => [],
       'source' => source }
   end
@@ -44,28 +94,5 @@ class NotebookCell
 
   def <=>(other)
     source <=> other.source
-  end
-end
-
-# Code Cells for Notebooks
-class CodeCell < NotebookCell; end
-
-# Markdown Cells for Notebooks
-class MarkdownCell < NotebookCell
-  attr_accessor :heading_level
-
-  def initialize(source: '', heading_level: 0)
-    super(source: source, cell_type: 'markdown')
-    self.heading_level = heading_level
-    self.hash = make_md_cell(source: source, heading_level: heading_level)
-  end
-
-  def make_md_cell(source: '', heading_level: 0)
-    if heading_level.positive?
-      hash_marks = '#' * heading_level
-      self.source = "#{hash_marks} #{source}"
-    end
-
-    make_cell_hash(cell_type: 'markdown', source: self.source)
   end
 end

@@ -1,61 +1,71 @@
 # frozen_string_literal: true
 
+# TODO: Work on sharpening the input types... string or array of strings? Done?
+
 # Cell for Jupyter Notebook
 class NotebookCell
-  attr_accessor :type, :content, :hash
+  include Comparable
 
-  def initialize(content: '', type: 'code')
-    self.hash = make_cell_hash(content: content)
-    self.type = type
-    self.content = content
+  attr_accessor :cell_type, :source, :hash
+
+  def initialize(source: '', cell_type: 'code')
+    self.hash = make_cell_hash(source: source, cell_type: cell_type)
+    self.cell_type = hash['cell_type']
+    self.source = hash['source']
   end
 
-  # self.make_cell - Valid cell_type are ['code'*, 'markdown'], *default
-  # cell = self.make_cell('yo', 'markdown')
-  def make_cell_hash(content: '', type: 'code')
-    { 'cell_type' => type,
+  def make_cell_hash(source: '', cell_type: 'code')
+    source = [source] unless source.is_a?(Array)
+
+    { 'cell_type' => cell_type,
       'execution_count' => 0,
       'metadata' => {},
       'outputs' => [],
-      'source' => [content] }
+      'source' => source }
   end
 
   def inspect
     details = []
-    details << "Type: #{type} Cell"
-    # details << "Content:"
-    details << "Lines: #{content.lines.size}"
-    details << "First Line: #{content.lines.size}"
+    details << "Cell Type: #{cell_type}"
+    # details << "source:"
+    details << "Lines: #{source.lines.size}"
+    details << "First Line: #{source.lines[0]}"
     # details << "\n"
     details
   end
 
   def to_s
-    content
+    source
+  end
+
+  def to_h
+    hash
+  end
+
+  def <=>(other)
+    source <=> other.source
   end
 end
 
 # Code Cells for Notebooks
-class CodeCell < NBCell; end
+class CodeCell < NotebookCell; end
 
 # Markdown Cells for Notebooks
-class MarkdownCell < NBCell
+class MarkdownCell < NotebookCell
   attr_accessor :heading_level
 
-  def initialize(content: '', heading_level: 0)
-    super(content: content, type: 'markdown')
+  def initialize(source: '', heading_level: 0)
+    super(source: source, cell_type: 'markdown')
     self.heading_level = heading_level
-    self.hash = make_md_cell(content: content, heading_level: heading_level)
+    self.hash = make_md_cell(source: source, heading_level: heading_level)
   end
 
-  def make_md_cell(content: '', heading_level: 0)
+  def make_md_cell(source: '', heading_level: 0)
     if heading_level.positive?
       hash_marks = '#' * heading_level
-      self.content = "#{hash_marks} #{content}"
+      self.source = "#{hash_marks} #{source}"
     end
 
-    make_cell_hash(type: 'markdown', content: self.content)
+    make_cell_hash(cell_type: 'markdown', source: self.source)
   end
 end
-
-puts MarkdownCell.new(content: 'New Notebook', heading_level: 1)

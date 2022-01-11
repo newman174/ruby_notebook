@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require 'pry'
-require '~/ruby_filetools/filetools'
+require_relative '../ruby_filetools/filetools'
 # require '~/Documents/ruby_filetools/filetools'
 require_relative 'notebookcell'
 

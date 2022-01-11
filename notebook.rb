@@ -3,7 +3,7 @@
 require 'pry'
 # require '~/ruby_filetools/filetools'
 require '~/Documents/ruby_filetools/filetools'
-require_relative 'cell'
+require_relative 'notebookcell'
 
 # Jupyter Notebook Tools for Ruby
 class Notebook
@@ -13,11 +13,15 @@ class Notebook
   NB_RUBY_VERSION = '3.0.1'
 
   BLANK_NB_HASH = { 'cells' => [],
-                    'metadata' => { 'kernelspec' => { 'display_name' => "Ruby #{NB_RUBY_VERSION}",
-                                                      'language' => 'ruby',
-                                                      'name' => 'ruby' },
-                                    'language_info' => { 'name' => 'ruby' },
-                                    'orig_nbformat' => 4 },
+                    'metadata' => {
+                      'kernelspec' => {
+                        'display_name' => "Ruby #{NB_RUBY_VERSION}",
+                        'language' => 'ruby',
+                        'name' => 'ruby'
+                      },
+                      'language_info' => { 'name' => 'ruby' },
+                      'orig_nbformat' => 4
+                    },
                     'nbformat' => 4,
                     'nbformat_minor' => 2 }.freeze
 
@@ -30,7 +34,7 @@ class Notebook
     nb_hash = File.open(nb_json_file_name) do |file|
       JSON.parse(file.read)
     end
-    new_nb = new(nb_hash: nb_hash).file_name
+    new_nb = new(nb_hash:).file_name
     new_nb.file_name = nb_json_file_name
     new_nb.cells = nb_json_file_name
   end
@@ -74,7 +78,9 @@ class Notebook
 
   # Add a markdown cell to the notebook.
   def add_markdown_cell(cell = MarkdownCell.new, heading_level = 0)
-    cell = MarkdownCell.new(source: cell, heading_level: heading_level) unless cell.is_a?(NotebookCell)
+    unless cell.is_a?(NotebookCell)
+      cell = MarkdownCell.new(source: cell, heading_level:)
+    end
     cells << cell
     refresh_cells
   end

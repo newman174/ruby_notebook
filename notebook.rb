@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../ruby_filetools/filetools'
-# require '~/Documents/ruby_filetools/filetools'
 require_relative 'notebookcell'
 
 # Jupyter Notebook Tools for Ruby
@@ -100,12 +99,9 @@ class Notebook
   end
 
   def to_json(*_args)
-    # binding.pry
     duped_nb_hash = nb_hash.dup
     duped_nb_hash['cells'] = nb_hash['cells'].dup
-    # binding.pry
     duped_nb_hash['cells'] = duped_nb_hash['cells'].map(&:to_h)
-    # binding.pry
     JSON.generate(duped_nb_hash)
   end
 
@@ -188,7 +184,5 @@ end
 # puts nb.cells.last.to_s
 # puts nb.to_json
 # puts Time.now
-# binding.pry
 
 # nb.save
-# binding.pry

@@ -63,6 +63,16 @@ class NotebookCell
     metadata['heading_level'] = lvl
   end
 
+  def outputs
+    hash['outputs']
+  end
+
+  def output_text
+    outputs.map do |output|
+      output['text'] || output['evalue']
+    end
+  end
+
   def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
     source = [source] unless source.is_a?(Array)
 

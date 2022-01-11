@@ -33,12 +33,14 @@ class Notebook
   end
 
   # Open JSON Notebook file (.ipynb) and return a Notebook object
-  def self.open(nb_json_file_name)
-    opened_nb_hash = File.open(nb_json_file_name) do |file|
-      JSON.parse(file.read)
-    end
+  def self.open(nb_json_f_name)
+    opened_nb_hash = if nb_json_f_name.start_with? ('{')
+                       JSON.parse(nb_json_f_name)
+                     else
+                       File.open(nb_json_f_name) { |file| JSON.parse(file.read) }
+                     end
     new_nb = new(existing_nb_hash: opened_nb_hash)
-    new_nb.file_name = nb_json_file_name
+    new_nb.file_name = nb_json_f_name
     new_nb
   end
 
@@ -93,7 +95,7 @@ class Notebook
   def created
     my_metadata['created']
   end
-  
+
   def created=(time_str)
     my_metadata['created'] = time_str
   end
@@ -174,15 +176,8 @@ class Notebook
       add_markdown_cell(text, hlevel)
     end
   end
+
+  def ==(other)
+    nb_hash == other.nb_hash
+  end
 end
-
-# nb = Notebook.new(title: 'New Notebook')
-# nb = Notebook.open('new_notebook.ipynb')
-# nb.push(Time.now.to_s)
-# code = "puts 'hello world'"
-# nb << NotebookCell.new(source: code)
-# puts nb.cells.last.to_s
-# puts nb.to_json
-# puts Time.now
-
-# nb.save

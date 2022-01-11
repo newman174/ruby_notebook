@@ -52,7 +52,7 @@ class Notebook
     self.title = title || self.title || "New Notebook"
     cell_hashes_to_objects!
     self.file_name = FileTools.fn_format(title)
-    # add_title_cell unless title.nil?
+    add_title_cell unless existing_nb_hash 
     # self.created = Time.new
   end
 
@@ -171,9 +171,12 @@ class Notebook
   end
 end
 
-# nb = Notebook.new(title: 'New Notebook')
-nb = Notebook.open('new_notebook.ipynb')
-nb.push('what a cool new cell!!!')
+nb = Notebook.new(title: 'New Notebook')
+# nb = Notebook.open('new_notebook.ipynb')
+# nb.push(Time.now.to_s)
+# puts nb.cells.last.to_s
+# puts nb.to_json
+# puts Time.now
 # binding.pry
 nb.save
 # binding.pry

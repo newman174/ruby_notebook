@@ -21,7 +21,11 @@ class Notebook
                       },
                       'language_info' => { 'name' => 'ruby' },
                       'orig_nbformat' => 4,
-                      'my_metadata' => { 'title' => '' }
+                      'my_metadata' => {
+                        'title' => nil,
+                        'file_name' => '',
+                        'created' => ''
+                      }
                     },
                     'nbformat' => 4,
                     'nbformat_minor' => 2 }.freeze
@@ -32,47 +36,80 @@ class Notebook
 
   # Open JSON Notebook file (.ipynb) and return a Notebook object
   def self.open(nb_json_file_name)
-    nb_hash = File.open(nb_json_file_name) do |file|
+    opened_nb_hash = File.open(nb_json_file_name) do |file|
       JSON.parse(file.read)
     end
-    new_nb = new(nb_hash:).file_name
+    new_nb = new(existing_nb_hash: opened_nb_hash)
     new_nb.file_name = nb_json_file_name
-    new_nb.cells = nb_json_file_name
+    new_nb
   end
 
-  attr_accessor :cells, :file_name, :created, :my_metadata
-  attr_reader :title
+  attr_accessor :nb_hash
 
-  def initialize(title: 'New Notebook', nb_hash: self.class::BLANK_NB_HASH.dup)
-    @nb_hash = nb_hash
-    self.cells = []
+  def initialize(title: nil, existing_nb_hash: nil)
+    self.nb_hash = existing_nb_hash.dup ||
+                   self.class::BLANK_NB_HASH.dup
+    self.title = title || self.title || "New Notebook"
+    cell_hashes_to_objects!
     self.file_name = FileTools.fn_format(title)
+    # add_title_cell unless title.nil?
     # self.created = Time.new
-    self.my_metadata = @nb_hash['metadata']['my_metadata']
-    self.title = title
-    add_title_cell unless title.nil?
-    refresh_nb_hash
+  end
+
+  def cell_hashes_to_objects!
+    self.cells = cells.map do |cell_hsh|
+      NotebookCell.new(existing_hash: cell_hsh)
+    end
+  end
+
+  def my_metadata
+    nb_hash['metadata']['my_metadata']
+  end
+
+  def title
+    my_metadata['title']
   end
 
   def title=(title)
     my_metadata['title'] = title
-    @title = my_metadata['title']
+  end
+
+  def cells
+    nb_hash['cells']
+  end
+
+  def cells=(cls)
+    nb_hash['cells'] = cls
+  end
+
+  def file_name
+    my_metadata['file_name']
+  end
+
+  def file_name=(fname)
+    my_metadata['file_name'] = fname
   end
 
   def to_json(*_args)
-    refresh_nb_hash
-    JSON.generate(@nb_hash)
+    # binding.pry
+    duped_nb_hash = nb_hash.dup
+    duped_nb_hash['cells'] = nb_hash['cells'].dup
+    # binding.pry
+    duped_nb_hash['cells'] = duped_nb_hash['cells'].map(&:to_h)
+    # binding.pry
+    JSON.generate(duped_nb_hash)
   end
 
-  def save(file_name: self.file_name, dir: Dir.pwd)
+  # def save(file_name: self.file_name, dir: Dir.pwd)
+  def save(dir: Dir.pwd)
     Dir.mkdir(dir) unless Dir.exist?(dir)
 
-    file_name += '.ipynb' unless file_name.end_with?('.ipynb')
-    refresh_nb_hash
+    self.file_name = "#{file_name}.ipynb" unless file_name.end_with?('.ipynb')
     Dir.chdir(dir) do
       File.open(file_name, 'w+') do |file|
-        file.write(to_json)
-        puts "File saved as #{dir}/#{file_name}"
+        if file.write(to_json).positive?
+          puts "File saved as #{dir}/#{file_name}"
+        end
       end
     end
   end
@@ -80,21 +117,18 @@ class Notebook
   # Add a code cell to the notebook.
   def add_code_cell(cell = CodeCell.new)
     cell = NotebookCell.new(source: cell) unless cell.is_a?(NotebookCell)
-    cells << cell
-    refresh_cells
+    cells << cell.dup
   end
 
   # Add a markdown cell to the notebook.
   def add_markdown_cell(cell = '', heading_level = 0)
     unless cell.is_a?(NotebookCell)
-      cell = NotebookCell.new(
-        source: cell,
-        cell_type: 'markdown',
-        heading_level:
-      )
+      cell = NotebookCell.new(source: cell,
+                              cell_type: 'markdown',
+                              heading_level:)
     end
-    cells << cell
-    refresh_cells
+
+    cells << cell.dup
   end
 
   alias add_cell add_markdown_cell
@@ -102,8 +136,8 @@ class Notebook
   alias push add_markdown_cell
 
   def add_title_cell
-    title_cell_source = "# #{title}"
-    add_markdown_cell(title_cell_source, 1)
+    heading = "# #{title}"
+    add_markdown_cell(heading, 1)
   end
 
   def size
@@ -115,8 +149,7 @@ class Notebook
   end
 
   def to_h
-    refresh_nb_hash
-    @nb_hash
+    nb_hash
   end
 
   def inspect
@@ -130,26 +163,17 @@ class Notebook
     output
   end
 
-  def add_numbered_subheadings(ending, starting: 1, heading_level: 2)
-    starting.upto(ending) do |num|
-      add_markdown_cell(format('%02i', num), heading_level)
+  def add_numbered_subheadings(last, first: 1, hlevel: 2)
+    first.upto(last) do |num|
+      text = "#{'#' * hlevel} #{format('%02i', num)}"
+      add_markdown_cell(text, hlevel)
     end
-  end
-
-  # private
-
-  def refresh_nb_hash
-    refresh_cells
-  end
-
-  def refresh_cells
-    @nb_hash['cells'] = cells.map(&:to_h)
   end
 end
 
-nb = Notebook.new
-nb.push('yo yo')
-nb << 'what it done?'
-nb.add_numbered_subheadings(12)
+# nb = Notebook.new(title: 'New Notebook')
+nb = Notebook.open('new_notebook.ipynb')
+nb.push('what a cool new cell!!!')
+# binding.pry
 nb.save
-binding.pry
+# binding.pry

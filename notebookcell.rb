@@ -6,7 +6,10 @@ class NotebookCell
 
   attr_accessor :hash
 
-  def initialize(source: '', cell_type: 'code', existing_hash: nil, heading_level: nil)
+  def initialize(source: '',
+                 cell_type: 'code',
+                 existing_hash: nil,
+                 heading_level: nil)
     self.hash = existing_hash || make_cell_hash(source:, cell_type:)
     self.heading_level = heading_level
   end

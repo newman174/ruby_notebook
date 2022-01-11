@@ -20,7 +20,8 @@ class Notebook
                         'name' => 'ruby'
                       },
                       'language_info' => { 'name' => 'ruby' },
-                      'orig_nbformat' => 4
+                      'orig_nbformat' => 4,
+                      'my_metadata' => { 'title' => '' }
                     },
                     'nbformat' => 4,
                     'nbformat_minor' => 2 }.freeze
@@ -39,16 +40,23 @@ class Notebook
     new_nb.cells = nb_json_file_name
   end
 
-  attr_accessor :title, :cells, :file_name, :created
+  attr_accessor :cells, :file_name, :created, :my_metadata
+  attr_reader :title
 
   def initialize(title: 'New Notebook', nb_hash: self.class::BLANK_NB_HASH.dup)
     @nb_hash = nb_hash
-    self.title = title
     self.cells = []
     self.file_name = FileTools.fn_format(title)
-    self.created = Time.new
+    # self.created = Time.new
+    self.my_metadata = @nb_hash['metadata']['my_metadata']
+    self.title = title
     add_title_cell unless title.nil?
     refresh_nb_hash
+  end
+
+  def title=(title)
+    self.my_metadata['title'] = title
+    @title = self.my_metadata['title']
   end
 
   def to_json(*_args)
@@ -77,9 +85,9 @@ class Notebook
   end
 
   # Add a markdown cell to the notebook.
-  def add_markdown_cell(cell = MarkdownCell.new, heading_level = 0)
+  def add_markdown_cell(cell = '', heading_level = 0)
     unless cell.is_a?(NotebookCell)
-      cell = MarkdownCell.new(source: cell, heading_level:)
+      cell = MarkdownCell.new(source: cell, heading_level: heading_level)
     end
     cells << cell
     refresh_cells
@@ -90,7 +98,7 @@ class Notebook
   alias push add_markdown_cell
 
   def add_title_cell
-    add_cell(title, 1)
+    add_markdown_cell(title, 1)
   end
 
   def size
@@ -139,3 +147,4 @@ nb.push('yo yo')
 nb << 'what it done?'
 nb.add_numbered_subheadings(12)
 nb.save
+binding.pry

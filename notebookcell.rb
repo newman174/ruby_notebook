@@ -24,15 +24,15 @@ class NotebookCell
       'source' => source }
   end
 
-  def inspect
-    details = []
-    details << "Cell Type: #{cell_type}"
-    # details << "source:"
-    details << "Lines: #{source.lines.size}"
-    details << "First Line: #{source.lines[0]}"
-    # details << "\n"
-    details
-  end
+  # def inspect
+  #   details = []
+  #   details << "Cell Type: #{cell_type}"
+  #   # details << "source:"
+  #   details << "Lines: #{source.lines.size}"
+  #   details << "First Line: #{source.lines[0]}"
+  #   # details << "\n"
+  #   details
+  # end
 
   def to_s
     source

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'pry'
-# require '~/ruby_filetools/filetools'
-require '~/Documents/ruby_filetools/filetools'
+require '~/ruby_filetools/filetools'
+# require '~/Documents/ruby_filetools/filetools'
 require_relative 'notebookcell'
 
 # Jupyter Notebook Tools for Ruby
@@ -125,7 +125,7 @@ class Notebook
     unless cell.is_a?(NotebookCell)
       cell = NotebookCell.new(source: cell,
                               cell_type: 'markdown',
-                              heading_level:)
+                              heading_level: heading_level)
     end
 
     cells << cell.dup
@@ -171,9 +171,9 @@ class Notebook
   end
 end
 
-nb = Notebook.new(title: 'New Notebook')
-# nb = Notebook.open('new_notebook.ipynb')
-# nb.push(Time.now.to_s)
+# nb = Notebook.new(title: 'New Notebook')
+nb = Notebook.open('new_notebook.ipynb')
+nb.push(Time.now.to_s)
 # puts nb.cells.last.to_s
 # puts nb.to_json
 # puts Time.now

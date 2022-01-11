@@ -52,8 +52,10 @@ class Notebook
     self.title = title || self.title || "New Notebook"
     cell_hashes_to_objects!
     self.file_name = FileTools.fn_format(title)
-    add_title_cell unless existing_nb_hash 
-    # self.created = Time.new
+    unless existing_nb_hash 
+      add_title_cell
+      self.created = Time.now.to_s
+    end
   end
 
   def cell_hashes_to_objects!
@@ -88,6 +90,14 @@ class Notebook
 
   def file_name=(fname)
     my_metadata['file_name'] = fname
+  end
+
+  def created
+    my_metadata['created']
+  end
+  
+  def created=(time_str)
+    my_metadata['created'] = time_str
   end
 
   def to_json(*_args)

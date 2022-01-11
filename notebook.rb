@@ -172,14 +172,14 @@ class Notebook
 end
 
 # nb = Notebook.new(title: 'New Notebook')
-nb = Notebook.open('new_notebook.ipynb')
+# nb = Notebook.open('new_notebook.ipynb')
 # nb.push(Time.now.to_s)
 # code = "puts 'hello world'"
 # nb << NotebookCell.new(source: code)
 # puts nb.cells.last.to_s
 # puts nb.to_json
 # puts Time.now
-binding.pry
+# binding.pry
 
-nb.save
+# nb.save
 # binding.pry

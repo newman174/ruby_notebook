@@ -107,7 +107,7 @@ class Notebook
     JSON.generate(duped_nb_hash)
   end
 
-  # def save(file_name: self.file_name, dir: Dir.pwd)
+  # Save the notebook to `dir:` in JSON with extension `.ipynb`
   def save(dir: Dir.pwd)
     Dir.mkdir(dir) unless Dir.exist?(dir)
 

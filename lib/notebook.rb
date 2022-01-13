@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../ruby_filetools/filetools'
-require_relative 'notebookcell'
+require_relative '../../ruby_filetools/lib/filetools'
+require_relative './notebook/notebookcell'
 
 # Jupyter Notebook Tools for Ruby
 class Notebook

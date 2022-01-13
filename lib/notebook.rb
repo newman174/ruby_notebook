@@ -37,7 +37,7 @@ class Notebook
     opened_nb_hash = if nb_json_f_name.start_with? ('{')
                        JSON.parse(nb_json_f_name)
                      else
-                       File.open(nb_json_f_name) { |file| JSON.parse(file.read) }
+                       JSON.parse(File.read(nb_json_f_name))
                      end
     new_nb = new(existing_nb_hash: opened_nb_hash)
     new_nb.file_name = nb_json_f_name

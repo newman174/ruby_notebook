@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../../ruby_filetools/lib/filetools'
-require_relative './notebook/notebookcell'
+require 'notebook/notebookcell'
 
 # Jupyter Notebook Tools for Ruby
 class Notebook
   require 'json'
-  include FileTools
 
   NB_RUBY_VERSION = '3.0.1'
 
@@ -51,7 +49,7 @@ class Notebook
                    self.class::BLANK_NB_HASH.dup
     self.title = title || self.title || "New Notebook"
     cell_hashes_to_objects!
-    self.file_name = FileTools.fn_format(title)
+    self.file_name = self.class.snake_case(title)
     unless existing_nb_hash 
       add_title_cell
       self.created = Time.now.to_s
@@ -179,5 +177,12 @@ class Notebook
 
   def ==(other)
     nb_hash == other.nb_hash
+  end
+
+  private
+
+  def self.snake_case(str)
+    str = 'file name' if str.nil? || str.empty?
+    str.downcase.gsub(' ', '_').gsub(/\W/, '')
   end
 end

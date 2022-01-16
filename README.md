@@ -14,3 +14,6 @@ Notebook files are JSON dictionaries.
 
 - Cell / group IDs
 - Init notebooks with a cell containing the metadata
+- Built in json schema validation
+- Under the hood overhaul
+- 

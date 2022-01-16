@@ -32,15 +32,23 @@ class Notebook
 
   # Open JSON Notebook file (.ipynb) and return a Notebook object
   def self.open(nb_json_f_name)
-    opened_nb_hash = if nb_json_f_name.start_with? ('{')
-                       JSON.parse(nb_json_f_name)
-                     else
-                       JSON.parse(File.read(nb_json_f_name))
-                     end
+    nb_json_f_name = File.read(nb_json_f_name) unless json?(nb_json_f_name)
+    opened_nb_hash = JSON.parse(nb_json_f_name)
     new_nb = new(existing_nb_hash: opened_nb_hash)
     new_nb.file_name = nb_json_f_name
     new_nb
   end
+
+  def self.snake_case(str)
+    str = 'file name' if str.nil? || str.empty?
+    str.downcase.gsub(' ', '_').gsub(/\W/, '')
+  end
+
+  def self.json?(input)
+    input.start_with?('{')
+  end
+
+  private_class_method :json?
 
   attr_accessor :nb_hash
 
@@ -50,10 +58,9 @@ class Notebook
     self.title = title || self.title || "New Notebook"
     cell_hashes_to_objects!
     self.file_name = self.class.snake_case(title)
-    unless existing_nb_hash 
-      add_title_cell
-      self.created = Time.now.to_s
-    end
+    return if existing_nb_hash
+    add_title_cell
+    self.created = Time.now.to_s
   end
 
   def cell_hashes_to_objects!
@@ -137,7 +144,9 @@ class Notebook
   end
 
   alias add_cell add_markdown_cell
+
   alias << add_markdown_cell
+
   alias push add_markdown_cell
 
   def add_title_cell
@@ -177,12 +186,5 @@ class Notebook
 
   def ==(other)
     nb_hash == other.nb_hash
-  end
-
-  private
-
-  def self.snake_case(str)
-    str = 'file name' if str.nil? || str.empty?
-    str.downcase.gsub(' ', '_').gsub(/\W/, '')
   end
 end

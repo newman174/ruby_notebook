@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'pry'
+
 require 'notebook/notebookcell'
 
 # Jupyter Notebook Tools for Ruby
@@ -35,7 +35,7 @@ class Notebook
     nb_json = File.read(nb_json) unless json?(nb_json)
     opened_nb_hash = JSON.parse(nb_json)
     new_nb = new(existing_nb_hash: opened_nb_hash)
-    new_nb.file_name = nb_json
+    # new_nb.file_name = nb_json
     new_nb
   end
 
@@ -110,7 +110,7 @@ class Notebook
     duped_nb_hash = nb_hash.dup
     duped_nb_hash['cells'] = nb_hash['cells'].dup
     duped_nb_hash['cells'] = duped_nb_hash['cells'].map(&:to_h)
-    JSON.generate(duped_nb_hash)
+    JSON.pretty_generate(duped_nb_hash)
   end
 
   # Save the notebook to `dir:` in JSON with extension `.ipynb`

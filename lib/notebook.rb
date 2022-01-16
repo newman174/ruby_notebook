@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-
+require 'pry'
 require 'notebook/notebookcell'
 
 # Jupyter Notebook Tools for Ruby
@@ -31,11 +31,11 @@ class Notebook
   end
 
   # Open JSON Notebook file (.ipynb) and return a Notebook object
-  def self.open(nb_json_f_name)
-    nb_json_f_name = File.read(nb_json_f_name) unless json?(nb_json_f_name)
-    opened_nb_hash = JSON.parse(nb_json_f_name)
+  def self.open(nb_json)
+    nb_json = File.read(nb_json) unless json?(nb_json)
+    opened_nb_hash = JSON.parse(nb_json)
     new_nb = new(existing_nb_hash: opened_nb_hash)
-    new_nb.file_name = nb_json_f_name
+    new_nb.file_name = nb_json
     new_nb
   end
 
@@ -61,6 +61,7 @@ class Notebook
     return if existing_nb_hash
     add_title_cell
     self.created = Time.now.to_s
+    add_info_cell
   end
 
   def cell_hashes_to_objects!
@@ -154,6 +155,14 @@ class Notebook
     add_markdown_cell(heading, 1)
   end
 
+  def add_info_cell
+    lines = ["## Info"]
+    keys = my_metadata.keys.map { |k| [k, self.class.heading_case(k)] }
+    keys.each { |k| lines << "**#{k[1]}:** #{my_metadata[k[0]]}\n\n" }
+    lines << "**Cells:** #{cells.size}\n"
+    add_markdown_cell(lines)
+  end
+
   def size
     cells.size
   end
@@ -186,5 +195,14 @@ class Notebook
 
   def ==(other)
     nb_hash == other.nb_hash
+  end
+
+  private
+
+  def self.heading_case(str)
+    raise TypeError unless str.is_a?(String)
+    str = str.dup
+    str.gsub!('_', ' ')
+    str.split.map(&:capitalize).join(' ')
   end
 end

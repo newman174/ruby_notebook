@@ -10,10 +10,15 @@ Notebook.rb is a Ruby Class for Jupyter Notebooks
 
 Notebook files are JSON dictionaries.
 
+2.0
+- [x] Init notebooks with a cell containing the metadata
+- [x] Pretty generate
+
 ### Planned Features
 
-- [ ] Cell / group IDs
-- [x] Init notebooks with a cell containing the metadata
+2.1
 - [ ] Built in json schema validation
+
+2.x
+- [ ] Cell / group IDs
 - [ ] Under the hood overhaul
-- [x] Pretty generate

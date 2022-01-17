@@ -68,6 +68,7 @@ class Notebook
     self.file_name = self.class.snake_case(title)
     return if existing_nb_hash
     add_title_cell
+    add_info_header
     self.created = Time.now.to_s
     add_info_cell
   end
@@ -144,20 +145,23 @@ class Notebook
   end
 
   # Add a code cell to the notebook.
-  def add_code_cell(cell = CodeCell.new)
-    cell = NotebookCell.new(source: cell) unless cell.is_a?(NotebookCell)
+  def add_code_cell(cell = CodeCell.new, tags = 'default')
+    cell = NotebookCell.new(source: cell, tags: tags) unless cell.is_a?(NotebookCell)
     cells << cell.dup
+    refresh_info_cell
   end
 
   # Add a markdown cell to the notebook.
-  def add_markdown_cell(cell = '', heading_level = 0)
+  def add_markdown_cell(cell = '', heading_level = 0, tags = '')
     unless cell.is_a?(NotebookCell)
       cell = NotebookCell.new(source: cell,
                               cell_type: 'markdown',
-                              heading_level: heading_level)
+                              heading_level: heading_level,
+                              tags: tags)
     end
 
     cells << cell.dup
+    refresh_info_cell
   end
 
   alias add_cell add_markdown_cell
@@ -167,24 +171,38 @@ class Notebook
   alias push add_markdown_cell
 
   def add_title_cell
-    heading = "# #{title}"
-    add_markdown_cell(heading, 1)
+    title_line = "# #{title}"
+    cells << NotebookCell.new(source: title_line, cell_type: 'markdown', heading_level: 0, tags: 'title')
   end
 
   def add_info_cell
-    info_header
     lines = []
     keys = prep_my_metadata_keys
     keys.each { |k| lines << "**#{k[1]}:** #{my_metadata[k[0]]}\n\n" }
     lines.insert(1, "**Author:** #{author}\n\n")
-    lines << "**Cells:** #{cells.size}\n\n"
-    add_markdown_cell(lines)
+    lines << "**Cells:** #{size}\n\n"
+    lines << "**Tags:** #{tags}\n\n"
+    info_cell = NotebookCell.new(source: lines,
+                                 cell_type: 'markdown',
+                                 heading_level: 0,
+                                 tags: 'info')
+    cells.insert(2, info_cell)
+  end
+
+  def refresh_info_cell
+    cells.delete_if { |cell| cell.tags.include?('info') }
+    add_info_header
+    add_info_cell
   end
 
   private
 
-  def info_header
-    add_markdown_cell("## Info")
+  def add_info_header
+    info_header = NotebookCell.new(source: "## Info",
+                               cell_type: 'markdown',
+                               heading_level: 2,
+                               tags: 'info')
+    cells.insert(1, info_header)
   end
 
   def prep_my_metadata_keys
@@ -192,6 +210,10 @@ class Notebook
   end
 
   public
+
+  def tags
+    cells.map(&:tags).uniq.compact.join(', ')
+  end
 
   def size
     cells.size
@@ -208,11 +230,12 @@ class Notebook
   def inspect
     output = []
     output << "Title: #{title}\n\n"
-    output << 'Cells:'
+    output << "Cells: #{size}\n\n"
     cells.each_with_index do |cell, index|
-      output << "#{index + 1}. #{cell.cell_type.capitalize} Cell"
+      output << "[#{index}] #{cell.cell_type.capitalize} Cell"
+      output << "[Tags] #{cell.tags.join(", ")}"
       output << cell.source
-      outpout << ''
+      output << ''
     end
     output
   end
@@ -220,7 +243,7 @@ class Notebook
   def add_numbered_subheadings(last, first: 1, hlevel: 2)
     first.upto(last) do |num|
       text = "#{'#' * hlevel} #{format('%02i', num)}"
-      add_markdown_cell(text, hlevel)
+      add_markdown_cell(text, hlevel, num.to_s)
     end
   end
 

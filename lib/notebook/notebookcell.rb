@@ -9,9 +9,12 @@ class NotebookCell
   def initialize(source: '',
                  cell_type: 'code',
                  existing_hash: nil,
-                 heading_level: nil)
+                 heading_level: nil,
+                 tags: '')
     raise TypeError unless existing_hash.nil? || existing_hash.is_a?(Hash)
     @id = generate_id
+    tags = [tags] unless tags.is_a?(Array)
+    @tags = tags
     self.to_h = !!existing_hash ||
                 make_cell_hash(source: source, cell_type: cell_type)
     self.heading_level = heading_level
@@ -42,12 +45,13 @@ class NotebookCell
     to_h['metadata'] = data
   end
 
-  def group
-    metadata['group']
+  def tags
+    metadata['tags']
   end
 
-  def group=(grp)
-    metadata['group'] = grp
+  def tags=(tgs)
+    tgs = [tgs] unless tgs.is_a?(Array)
+    metadata['tags'] = tgs
   end
 
   def id
@@ -93,7 +97,7 @@ class NotebookCell
     hsh = { 'cell_type' => cell_type,
             'id' => @id,
             'metadata' => {
-              'group' => @group,
+              'tags' => @tags,
               'heading_level' => heading_level
             },
             'source' => source }

@@ -8,5 +8,5 @@ Gem::Specification.new do |s|
   s.files                 = ["lib/notebook.rb", 'lib/notebook/notebookcell.rb']
   s.homepage              = ''
   s.license               = 'None'
-  s.required_ruby_version = '>= 3.1.0'
+  s.required_ruby_version = '>= 3.0.1'
 end

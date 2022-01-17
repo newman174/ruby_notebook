@@ -10,7 +10,8 @@ class NotebookCell
                  cell_type: 'code',
                  existing_hash: nil,
                  heading_level: nil)
-    self.hash = existing_hash || make_cell_hash(source: source, cell_type: cell_type)
+    raise TypeError unless existing_hash.nil? || existing_hash.is_a?(Hash)
+    self.hash = !!existing_hash || make_cell_hash(source: source, cell_type: cell_type)
     self.heading_level = heading_level
   end
 
@@ -73,33 +74,51 @@ class NotebookCell
     end
   end
 
+  def collapsed
+    metadata['collapsed']
+  end
+
+  def collapsed=(bool)
+    raise TypeError unless bool.is_a?(TrueClass) || bool.is_a?(FalseClass)
+    metadata['collapsed'] = bool
+  end
+
   def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
     source = [source] unless source.is_a?(Array)
 
-    { 'cell_type' => cell_type,
-      'execution_count' => 0,
-      'metadata' => {
-        'group' => nil,
-        'id' => nil,
-        'heading_level' => heading_level
-      },
-      'outputs' => [],
-      'source' => source }
+    hsh = { 'cell_type' => cell_type,
+            'id' => (self.id = generate_id),
+            'metadata' => {
+              'group' => 'some_group',
+              'heading_level' => heading_level,
+              'collapsed' => false
+            },
+            'source' => source }
+
+    if cell_type == 'code'
+      hsh['execution_count'] = 0
+      hsh['outputs'] = []
+    end
+    hsh
   end
 
-  def inspect
-    details = []
-    details << "Cell Type: #{cell_type}"
-    # details << "source:"
-    begin
-    details << "Lines: #{source.lines.size}"
-    details << "First Line: #{source.lines[0]}"
-    rescue NoMethodError
-      details << source
-    end
-    details << "\n"
-    details
+  def generate_id
+    Time.now.to_f.to_s.delete('.')
   end
+
+  # def inspect
+    # details = []
+    # details << "Cell Type: #{cell_type}"
+    # # details << "source:"
+    # begin
+    # details << "Lines: #{source.lines.size}"
+    # details << "First Line: #{source.lines[0]}"
+    # rescue NoMethodError
+    #   details << source
+    # end
+    # details << "\n"
+    # details
+  # end
 
   def to_s
     source

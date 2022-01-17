@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'notebook/notebookcell'
+require_relative 'notebook/notebookcell'
 
 # Jupyter Notebook Tools for Ruby
 class Notebook
@@ -24,7 +24,7 @@ class Notebook
                       }
                     },
                     'nbformat' => 4,
-                    'nbformat_minor' => 2 }.freeze
+                    'nbformat_minor' => 5 }.freeze
 
   def self.to_s
     'Notebook'
@@ -34,9 +34,7 @@ class Notebook
   def self.open(nb_json)
     nb_json = File.read(nb_json) unless json?(nb_json)
     opened_nb_hash = JSON.parse(nb_json)
-    new_nb = new(existing_nb_hash: opened_nb_hash)
-    # new_nb.file_name = nb_json
-    new_nb
+    new(existing_nb_hash: opened_nb_hash)
   end
 
   def self.snake_case(str)
@@ -156,12 +154,22 @@ class Notebook
   end
 
   def add_info_cell
-    lines = ["## Info"]
+    info_header
+    lines = []
     keys = my_metadata.keys.map { |k| [k, self.class.heading_case(k)] }
     keys.each { |k| lines << "**#{k[1]}:** #{my_metadata[k[0]]}\n\n" }
     lines << "**Cells:** #{cells.size}\n"
     add_markdown_cell(lines)
   end
+
+  private
+
+  def info_header
+    add_markdown_cell("## Info")
+    cells.last.collapsed = true
+  end
+
+  public
 
   def size
     cells.size
@@ -196,8 +204,6 @@ class Notebook
   def ==(other)
     nb_hash == other.nb_hash
   end
-
-  private
 
   def self.heading_case(str)
     raise TypeError unless str.is_a?(String)

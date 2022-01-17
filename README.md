@@ -20,5 +20,8 @@ Notebook files are JSON dictionaries.
 - [ ] Built in json schema validation
 
 2.x
-- [ ] Cell / group IDs
+- [/] Cell / group IDs
 - [ ] Under the hood overhaul
+- [ ] insert cell
+- [ ] `inspect` and `to_s` improvements
+- [ ] rename `cell.hash` to `cell.to_h`

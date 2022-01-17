@@ -17,11 +17,12 @@ Notebook files are JSON dictionaries.
 ### Planned Features
 
 2.1
-- [ ] Built in json schema validation
+- [x] Cell / group IDs
+- [x] info cells
+- [x] rename `cell.hash` to `cell.to_h`
+- [/] `inspect` and `to_s` improvements
 
 2.x
-- [/] Cell / group IDs
+- [ ] Built in json schema validation
 - [ ] Under the hood overhaul
 - [ ] insert cell
-- [ ] `inspect` and `to_s` improvements
-- [ ] rename `cell.hash` to `cell.to_h`

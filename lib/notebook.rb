@@ -6,7 +6,9 @@ require_relative 'notebook/notebookcell'
 class Notebook
   require 'json'
 
-  NB_RUBY_VERSION = '3.0.1'
+  NB_RUBY_VERSION = '3.1.0'
+
+  DEFAULT_AUTHOR = 'newms'
 
   BLANK_NB_HASH = { 'cells' => [],
                     'metadata' => {
@@ -17,6 +19,7 @@ class Notebook
                       },
                       'language_info' => { 'name' => 'ruby' },
                       'orig_nbformat' => 4,
+                      'authors' => [{ 'name' => DEFAULT_AUTHOR }],
                       'my_metadata' => {
                         'title' => nil,
                         'file_name' => '',
@@ -40,6 +43,13 @@ class Notebook
   def self.snake_case(str)
     str = 'file name' if str.nil? || str.empty?
     str.downcase.gsub(' ', '_').gsub(/\W/, '')
+  end
+
+  def self.heading_case(str)
+    raise TypeError unless str.is_a?(String)
+    str = str.dup
+    str.gsub!('_', ' ')
+    str.split.map(&:capitalize).join(' ')
   end
 
   def self.json?(input)
@@ -104,6 +114,14 @@ class Notebook
     my_metadata['created'] = time_str
   end
 
+  def author
+    nb_hash['metadata']['authors'][0]['name']
+  end
+
+  def author=(auth)
+    nb_hash['metadata']['authors'][0]['name'] = auth
+  end
+
   def to_json(*_args)
     duped_nb_hash = nb_hash.dup
     duped_nb_hash['cells'] = nb_hash['cells'].dup
@@ -156,9 +174,10 @@ class Notebook
   def add_info_cell
     info_header
     lines = []
-    keys = my_metadata.keys.map { |k| [k, self.class.heading_case(k)] }
+    keys = prep_my_metadata_keys
     keys.each { |k| lines << "**#{k[1]}:** #{my_metadata[k[0]]}\n\n" }
-    lines << "**Cells:** #{cells.size}\n"
+    lines.insert(1, "**Author:** #{author}\n\n")
+    lines << "**Cells:** #{cells.size}\n\n"
     add_markdown_cell(lines)
   end
 
@@ -166,7 +185,10 @@ class Notebook
 
   def info_header
     add_markdown_cell("## Info")
-    cells.last.collapsed = true
+  end
+
+  def prep_my_metadata_keys
+    my_metadata.keys.map { |key| [key, self.class.heading_case(key)] }
   end
 
   public
@@ -190,6 +212,7 @@ class Notebook
     cells.each_with_index do |cell, index|
       output << "#{index + 1}. #{cell.cell_type.capitalize} Cell"
       output << cell.source
+      outpout << ''
     end
     output
   end
@@ -203,12 +226,5 @@ class Notebook
 
   def ==(other)
     nb_hash == other.nb_hash
-  end
-
-  def self.heading_case(str)
-    raise TypeError unless str.is_a?(String)
-    str = str.dup
-    str.gsub!('_', ' ')
-    str.split.map(&:capitalize).join(' ')
   end
 end

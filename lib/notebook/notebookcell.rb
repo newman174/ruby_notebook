@@ -4,47 +4,54 @@
 class NotebookCell
   include Comparable
 
-  attr_accessor :hash
+  attr_accessor :to_h
 
   def initialize(source: '',
                  cell_type: 'code',
                  existing_hash: nil,
-                 heading_level: nil)
-    self.hash = existing_hash || make_cell_hash(source: source, cell_type: cell_type)
+                 heading_level: nil,
+                 tags: '')
+    raise TypeError unless existing_hash.nil? || existing_hash.is_a?(Hash)
+    @id = generate_id
+    tags = [tags] unless tags.is_a?(Array)
+    @tags = tags
+    self.to_h = !!existing_hash ||
+                make_cell_hash(srce: source, type: cell_type)
     self.heading_level = heading_level
   end
 
   def source
-    hash['source']
+    to_h['source']
   end
 
   def source=(srce)
     srce = [srce] unless srce.is_a?(Array)
-    hash['source'] = srce
+    to_h['source'] = srce
   end
 
   def cell_type
-    hash['cell_type']
+    to_h['cell_type']
   end
 
   def cell_type=(type)
-    hash['cell_type'] = type
+    to_h['cell_type'] = type
   end
 
   def metadata
-    hash['metadata']
+    to_h['metadata']
   end
 
   def metadata=(data)
-    hash['metadata'] = data
+    to_h['metadata'] = data
   end
 
-  def group
-    metadata['group']
+  def tags
+    metadata['tags']
   end
 
-  def group=(grp)
-    metadata['group'] = grp
+  def tags=(tgs)
+    tgs = [tgs] unless tgs.is_a?(Array)
+    metadata['tags'] = tgs
   end
 
   def id
@@ -64,7 +71,7 @@ class NotebookCell
   end
 
   def outputs
-    hash['outputs']
+    to_h['outputs']
   end
 
   def output_text
@@ -73,29 +80,52 @@ class NotebookCell
     end
   end
 
-  def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
-    source = [source] unless source.is_a?(Array)
+  def collapsed
+    metadata['collapsed']
+  end
 
-    { 'cell_type' => cell_type,
-      'execution_count' => 0,
-      'metadata' => {
-        'group' => nil,
-        'id' => nil,
-        'heading_level' => heading_level
-      },
-      'outputs' => [],
-      'source' => source }
+  def collapsed=(bool)
+    raise TypeError unless bool.is_a?(TrueClass) || bool.is_a?(FalseClass)
+    metadata['collapsed'] = bool
+  end
+
+  # rubocop:disable Metrics/MethodLength
+
+  def make_cell_hash(srce: '', type: 'code', heading_level: nil)
+    srce = [srce] unless srce.is_a?(Array)
+
+    hsh = { 'cell_type' => type,
+            'id' => @id,
+            'metadata' => {
+              'tags' => @tags,
+              'heading_level' => heading_level
+            },
+            'source' => srce }
+
+    if type == 'code'
+      hsh['metadata']['collapsed'] = false
+      hsh['execution_count'] = 0
+      hsh['outputs'] = []
+    end
+
+    hsh
+  end
+
+  # rubocop:enable Metrics/MethodLength
+
+  def generate_id
+    Time.now.to_f.to_s.delete('.')
   end
 
   def inspect
     details = []
     details << "Cell Type: #{cell_type}"
-    # details << "source:"
+    details << "Tags: #{tags.join(', ')}"
     begin
     details << "Lines: #{source.lines.size}"
     details << "First Line: #{source.lines[0]}"
     rescue NoMethodError
-      details << source
+      details << "Source: #{source}"
     end
     details << "\n"
     details
@@ -105,11 +135,8 @@ class NotebookCell
     source
   end
 
-  def to_h
-    hash
-  end
-
   def <=>(other)
-    source <=> other.source
+    # source <=> other.source
+    id <=> other.id
   end
 end

@@ -102,7 +102,7 @@ class NotebookCell
             },
             'source' => srce }
 
-    if cell_type == 'code'
+    if type == 'code'
       hsh['metadata']['collapsed'] = false
       hsh['execution_count'] = 0
       hsh['outputs'] = []
@@ -117,19 +117,19 @@ class NotebookCell
     Time.now.to_f.to_s.delete('.')
   end
 
-  # def inspect
-  # details = []
-  # details << "Cell Type: #{cell_type}"
-  # # details << "source:"
-  # begin
-  # details << "Lines: #{source.lines.size}"
-  # details << "First Line: #{source.lines[0]}"
-  # rescue NoMethodError
-  #   details << source
-  # end
-  # details << "\n"
-  # details
-  # end
+  def inspect
+    details = []
+    details << "Cell Type: #{cell_type}"
+    details << "Tags: #{tags.join(', ')}"
+    begin
+    details << "Lines: #{source.lines.size}"
+    details << "First Line: #{source.lines[0]}"
+    rescue NoMethodError
+      details << "Source: #{source}"
+    end
+    details << "\n"
+    details
+  end
 
   def to_s
     source

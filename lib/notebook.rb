@@ -146,7 +146,9 @@ class Notebook
 
   # Add a code cell to the notebook.
   def add_code_cell(cell = CodeCell.new, tags = 'default')
-    cell = NotebookCell.new(source: cell, tags: tags) unless cell.is_a?(NotebookCell)
+    unless cell.is_a?(NotebookCell)
+      cell = NotebookCell.new(source: cell, tags: tags)
+    end
     cells << cell.dup
     refresh_info_cell
   end
@@ -172,8 +174,13 @@ class Notebook
 
   def add_title_cell
     title_line = "# #{title}"
-    cells << NotebookCell.new(source: title_line, cell_type: 'markdown', heading_level: 0, tags: 'title')
+    cells << NotebookCell.new(source: title_line,
+                              cell_type: 'markdown',
+                              heading_level: 0,
+                              tags: 'title')
   end
+
+  # rubocop:disable Metrics/MethodLength
 
   def add_info_cell
     lines = []
@@ -189,6 +196,8 @@ class Notebook
     cells.insert(2, info_cell)
   end
 
+  # rubocop:enable Metrics/MethodLength
+
   def refresh_info_cell
     cells.delete_if { |cell| cell.tags.include?('info') }
     add_info_header
@@ -199,9 +208,9 @@ class Notebook
 
   def add_info_header
     info_header = NotebookCell.new(source: "## Info",
-                               cell_type: 'markdown',
-                               heading_level: 2,
-                               tags: 'info')
+                                   cell_type: 'markdown',
+                                   heading_level: 2,
+                                   tags: 'info')
     cells.insert(1, info_header)
   end
 
@@ -233,7 +242,7 @@ class Notebook
     output << "Cells: #{size}\n\n"
     cells.each_with_index do |cell, index|
       output << "[#{index}] #{cell.cell_type.capitalize} Cell"
-      output << "[Tags] #{cell.tags.join(", ")}"
+      output << "[Tags] #{cell.tags.join(', ')}"
       output << cell.source
       output << ''
     end

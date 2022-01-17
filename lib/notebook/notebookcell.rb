@@ -4,40 +4,42 @@
 class NotebookCell
   include Comparable
 
-  attr_accessor :hash
+  attr_accessor :to_h
 
   def initialize(source: '',
                  cell_type: 'code',
                  existing_hash: nil,
                  heading_level: nil)
     raise TypeError unless existing_hash.nil? || existing_hash.is_a?(Hash)
-    self.hash = !!existing_hash || make_cell_hash(source: source, cell_type: cell_type)
+    @id = generate_id
+    self.to_h = !!existing_hash ||
+                make_cell_hash(source: source, cell_type: cell_type)
     self.heading_level = heading_level
   end
 
   def source
-    hash['source']
+    to_h['source']
   end
 
   def source=(srce)
     srce = [srce] unless srce.is_a?(Array)
-    hash['source'] = srce
+    to_h['source'] = srce
   end
 
   def cell_type
-    hash['cell_type']
+    to_h['cell_type']
   end
 
   def cell_type=(type)
-    hash['cell_type'] = type
+    to_h['cell_type'] = type
   end
 
   def metadata
-    hash['metadata']
+    to_h['metadata']
   end
 
   def metadata=(data)
-    hash['metadata'] = data
+    to_h['metadata'] = data
   end
 
   def group
@@ -65,7 +67,7 @@ class NotebookCell
   end
 
   def outputs
-    hash['outputs']
+    to_h['outputs']
   end
 
   def output_text
@@ -83,52 +85,54 @@ class NotebookCell
     metadata['collapsed'] = bool
   end
 
+  # rubocop:disable Metrics/MethodLength
+
   def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
     source = [source] unless source.is_a?(Array)
 
     hsh = { 'cell_type' => cell_type,
-            'id' => (self.id = generate_id),
+            'id' => @id,
             'metadata' => {
-              'group' => 'some_group',
-              'heading_level' => heading_level,
-              'collapsed' => false
+              'group' => @group,
+              'heading_level' => heading_level
             },
             'source' => source }
 
     if cell_type == 'code'
+      hsh['metadata']['collapsed'] = false
       hsh['execution_count'] = 0
       hsh['outputs'] = []
     end
+
     hsh
   end
+
+  # rubocop:enable Metrics/MethodLength
 
   def generate_id
     Time.now.to_f.to_s.delete('.')
   end
 
   # def inspect
-    # details = []
-    # details << "Cell Type: #{cell_type}"
-    # # details << "source:"
-    # begin
-    # details << "Lines: #{source.lines.size}"
-    # details << "First Line: #{source.lines[0]}"
-    # rescue NoMethodError
-    #   details << source
-    # end
-    # details << "\n"
-    # details
+  # details = []
+  # details << "Cell Type: #{cell_type}"
+  # # details << "source:"
+  # begin
+  # details << "Lines: #{source.lines.size}"
+  # details << "First Line: #{source.lines[0]}"
+  # rescue NoMethodError
+  #   details << source
+  # end
+  # details << "\n"
+  # details
   # end
 
   def to_s
     source
   end
 
-  def to_h
-    hash
-  end
-
   def <=>(other)
-    source <=> other.source
+    # source <=> other.source
+    id <=> other.id
   end
 end

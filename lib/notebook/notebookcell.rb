@@ -16,7 +16,7 @@ class NotebookCell
     tags = [tags] unless tags.is_a?(Array)
     @tags = tags
     self.to_h = !!existing_hash ||
-                make_cell_hash(source: source, cell_type: cell_type)
+                make_cell_hash(srce: source, type: cell_type)
     self.heading_level = heading_level
   end
 
@@ -91,16 +91,16 @@ class NotebookCell
 
   # rubocop:disable Metrics/MethodLength
 
-  def make_cell_hash(source: '', cell_type: 'code', heading_level: nil)
-    source = [source] unless source.is_a?(Array)
+  def make_cell_hash(srce: '', type: 'code', heading_level: nil)
+    srce = [srce] unless srce.is_a?(Array)
 
-    hsh = { 'cell_type' => cell_type,
+    hsh = { 'cell_type' => type,
             'id' => @id,
             'metadata' => {
               'tags' => @tags,
               'heading_level' => heading_level
             },
-            'source' => source }
+            'source' => srce }
 
     if cell_type == 'code'
       hsh['metadata']['collapsed'] = false

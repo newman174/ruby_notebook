@@ -145,21 +145,21 @@ class Notebook
   end
 
   # Add a code cell to the notebook.
-  def add_code_cell(cell = CodeCell.new, tags = 'default')
+  def add_code_cell(cell = CodeCell.new, tgs = 'default')
     unless cell.is_a?(NotebookCell)
-      cell = NotebookCell.new(source: cell, tags: tags)
+      cell = NotebookCell.new(source: cell, tags: tgs)
     end
     cells << cell.dup
     refresh_info_cell
   end
 
   # Add a markdown cell to the notebook.
-  def add_markdown_cell(cell = '', heading_level = 0, tags = '')
+  def add_markdown_cell(cell = '', h_level = 0, tgs = '')
     unless cell.is_a?(NotebookCell)
       cell = NotebookCell.new(source: cell,
                               cell_type: 'markdown',
-                              heading_level: heading_level,
-                              tags: tags)
+                              heading_level: h_level,
+                              tags: tgs)
     end
 
     cells << cell.dup

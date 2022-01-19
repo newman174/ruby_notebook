@@ -2,6 +2,7 @@
 
 require_relative 'notebook/notebookcell'
 require_relative 'notebook/loader'
+# require_relative 'notebook/nbtools'
 
 require 'json'
 

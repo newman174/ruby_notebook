@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 # Cells for Jupyter Notebooks
+
+require_relative 'nbtools'
+
 class NotebookCell
   attr_accessor :heading_level,
                 :id,
@@ -22,7 +25,7 @@ class NotebookCell
     self.cell_type = cell_type
     self.heading_level = heading_level
     self.tags = tags
-    self.id = generate_id
+    self.id = NBTools.generate_id
     self.execution_count = execution_count
     self.outputs = []
     self.name = ''
@@ -60,11 +63,6 @@ class NotebookCell
     end
 
     hsh
-  end
-
-  # TODO: Move to separate class
-  def generate_id
-    Time.now.to_f.to_s.delete('.')
   end
 
   # def inspect

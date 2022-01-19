@@ -32,7 +32,8 @@ Notebook files are JSON dictionaries.
 
 0.3.1
 
-- [x] Encapsulate loader class
+- [x] Encapsulate loader to class
+- [X] Encapsulate ID generator to class
 
 0.3.2
 

@@ -37,4 +37,8 @@ Notebook files are JSON dictionaries.
 
 0.3.2
 
+- [ ] Split notebookcell class to code and markdown cell subclasses
+
+x.x.x
+
 - [ ] Reserved cell names list (notebook instance method?)

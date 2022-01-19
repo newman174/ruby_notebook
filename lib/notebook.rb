@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 require_relative 'notebook/notebookcell'
+require 'json'
 
 # Jupyter Notebook Tools for Ruby
 class Notebook
-  require 'json'
-
   NB_RUBY_VERSION = '3.1.0'
 
   DEFAULT_AUTHOR = 'newms'
@@ -33,11 +32,34 @@ class Notebook
     'Notebook'
   end
 
-  # Open JSON Notebook file (.ipynb) and return a Notebook object
   def self.open(nb_json)
+    opened_nb_hash = read_json(nb_json)
+    new_nb = new
+    new_nb.import_cells(opened_nb_hash)
+    new_nb.authors = opened_nb_hash['metadata']['authors']
+    new_nb.set_custom_metadata(opened_nb_hash, 'my_metadata')
+    new_nb
+  end
+
+  def self.read_json(nb_json)
     nb_json = File.read(nb_json) unless json?(nb_json)
-    opened_nb_hash = JSON.parse(nb_json)
-    new(existing_nb_hash: opened_nb_hash)
+    JSON.parse(nb_json)
+  end
+
+  def self.json?(input)
+    input.start_with?('{')
+  end
+
+  def import_cells(nb_hash)
+    self.cells = nb_hash['cells'].map do |cell_hash|
+      NotebookCell.open(cell_hash)
+    end
+  end
+
+  def set_custom_metadata(nb_hash, namespace)
+    nb_hash['metadata'][namespace].each do |k, v|
+      send("#{k}=", v)
+    end
   end
 
   def self.snake_case(str)
@@ -52,80 +74,20 @@ class Notebook
     str.split.map(&:capitalize).join(' ')
   end
 
-  def self.json?(input)
-    input.start_with?('{')
-  end
+  attr_accessor :cells, :authors, :title, :file_name, :created
 
-  private_class_method :json?
-
-  attr_accessor :nb_hash
-
-  def initialize(title: nil, existing_nb_hash: nil)
-    self.nb_hash = existing_nb_hash.dup ||
-                   self.class::BLANK_NB_HASH.dup
-    self.title = title || self.title || "New Notebook"
-    cell_hashes_to_objects!
+  def initialize(title = 'New Notebook')
+    self.cells = []
+    self.authors = [{ name: DEFAULT_AUTHOR }]
+    self.title = title
     self.file_name = self.class.snake_case(title)
-    return if existing_nb_hash
-    add_title_cell
-    add_info_header
     self.created = Time.now.to_s
+    add_title_cell
     add_info_cell
   end
 
-  def cell_hashes_to_objects!
-    self.cells = cells.map do |cell_hsh|
-      NotebookCell.new(existing_hash: cell_hsh)
-    end
-  end
-
-  def my_metadata
-    nb_hash['metadata']['my_metadata']
-  end
-
-  def title
-    my_metadata['title']
-  end
-
-  def title=(title)
-    my_metadata['title'] = title
-  end
-
-  def cells
-    nb_hash['cells']
-  end
-
-  def cells=(cls)
-    nb_hash['cells'] = cls
-  end
-
-  def file_name
-    my_metadata['file_name']
-  end
-
-  def file_name=(fname)
-    my_metadata['file_name'] = fname
-  end
-
-  def created
-    my_metadata['created']
-  end
-
-  def created=(time_str)
-    my_metadata['created'] = time_str
-  end
-
-  def author
-    nb_hash['metadata']['authors'][0]['name']
-  end
-
-  def author=(auth)
-    nb_hash['metadata']['authors'][0]['name'] = auth
-  end
-
   def to_json(*_args)
-    duped_nb_hash = nb_hash.dup
-    duped_nb_hash['cells'] = nb_hash['cells'].dup
+    duped_nb_hash = to_h.dup
     duped_nb_hash['cells'] = duped_nb_hash['cells'].map(&:to_h)
     JSON.pretty_generate(duped_nb_hash)
   end
@@ -154,7 +116,7 @@ class Notebook
   end
 
   # Add a markdown cell to the notebook.
-  def add_markdown_cell(cell = '', h_level = 0, tgs = '')
+  def add_markdown_cell(cell = '', h_level = 0, tgs = 'default')
     unless cell.is_a?(NotebookCell)
       cell = NotebookCell.new(source: cell,
                               cell_type: 'markdown',
@@ -176,52 +138,37 @@ class Notebook
     title_line = "# #{title}"
     cells << NotebookCell.new(source: title_line,
                               cell_type: 'markdown',
-                              heading_level: 0,
+                              heading_level: 1,
                               tags: 'title')
+    cells.last.name = 'title'
   end
 
-  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Metrics/AbcSize
 
   def add_info_cell
+    cells << NotebookCell.new(cell_type: 'markdown',
+                              tags: 'info')
+    cells.insert(1, cells.pop)
+
     lines = []
-    keys = prep_my_metadata_keys
-    keys.each { |k| lines << "**#{k[1]}:** #{my_metadata[k[0]]}\n\n" }
-    lines.insert(1, "**Author:** #{author}\n\n")
+    lines << "**Authors:** #{authors.map(&:values).flatten.join(', ')}\n\n"
+    lines << "**Created:** #{created}\n\n"
     lines << "**Cells:** #{size}\n\n"
     lines << "**Tags:** #{tags}\n\n"
-    info_cell = NotebookCell.new(source: lines,
-                                 cell_type: 'markdown',
-                                 heading_level: 0,
-                                 tags: 'info')
-    cells.insert(2, info_cell)
+
+    cells[1].source = lines
+    cells[1].name = 'info'
   end
 
-  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Metrics/AbcSize
 
   def refresh_info_cell
-    cells.delete_if { |cell| cell.tags.include?('info') }
-    add_info_header
+    cells.delete_if { |cell| cell.name == 'info' }
     add_info_cell
   end
 
-  private
-
-  def add_info_header
-    info_header = NotebookCell.new(source: "## Info",
-                                   cell_type: 'markdown',
-                                   heading_level: 2,
-                                   tags: 'info')
-    cells.insert(1, info_header)
-  end
-
-  def prep_my_metadata_keys
-    my_metadata.keys.map { |key| [key, self.class.heading_case(key)] }
-  end
-
-  public
-
   def tags
-    cells.map(&:tags).uniq.compact.join(', ')
+    cells.map(&:tags).uniq.join(', ')
   end
 
   def size
@@ -233,13 +180,20 @@ class Notebook
   end
 
   def to_h
-    nb_hash
+    nb_hsh = BLANK_NB_HASH.dup
+    nb_hsh['cells'] = cells
+    nb_hsh['metadata']['authors'] = authors
+    custom_meta = nb_hsh['metadata']['my_metadata']
+    custom_meta['title'] = title
+    custom_meta['file_name'] = file_name
+    custom_meta['created'] = created
+    nb_hsh
   end
 
   def inspect
     output = []
-    output << "Title: #{title}\n\n"
-    output << "Cells: #{size}\n\n"
+    output << "Title: #{title}"
+    output << "Cells: #{size}"
     cells.each_with_index do |cell, index|
       output << "[#{index}] #{cell.cell_type.capitalize} Cell"
       output << "[Tags] #{cell.tags.join(', ')}"

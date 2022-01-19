@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'notebook/notebookcell'
+require_relative 'notebook/loader'
+
 require 'json'
 
 # Jupyter Notebook Tools for Ruby
@@ -33,26 +35,12 @@ class Notebook
   end
 
   def self.open(nb_json)
-    opened_nb_hash = read_json(nb_json)
-    new_nb = new
-    new_nb.import_cells(opened_nb_hash)
-    new_nb.authors = opened_nb_hash['metadata']['authors']
-    new_nb.set_custom_metadata(opened_nb_hash, 'my_metadata')
-    new_nb
-  end
-
-  def self.read_json(nb_json)
-    nb_json = File.read(nb_json) unless json?(nb_json)
-    JSON.parse(nb_json)
-  end
-
-  def self.json?(input)
-    input.start_with?('{')
+    NBLoader.open(nb_json)
   end
 
   def import_cells(nb_hash)
     self.cells = nb_hash['cells'].map do |cell_hash|
-      NotebookCell.open(cell_hash)
+      CellLoader.open(cell_hash)
     end
   end
 
@@ -163,6 +151,8 @@ class Notebook
   # rubocop:enable Metrics/AbcSize
 
   def refresh_info_cell
+    # TODO: test the next line
+    # return unless cells.any? { |cell| cell.name == 'info' }
     cells.delete_if { |cell| cell.name == 'info' }
     add_info_cell
   end

@@ -1,37 +1,17 @@
 # frozen_string_literal: true
 
-# Cell for Jupyter Notebook
+# Cells for Jupyter Notebooks
 class NotebookCell
-  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  attr_accessor :heading_level,
+                :id,
+                :execution_count,
+                :collapsed,
+                :outputs,
+                :name
 
-  def self.open(cell_hash)
-    cell = new
-
-    cell.cell_type = cell_hash['cell_type']
-    cell.id = cell_hash['id']
-    cell.tags = cell_hash['metadata']['tags']
-    cell.heading_level = cell_hash['metadata']['heading_level']
-    cell.source = cell_hash['source']
-    cell.name = cell_hash['metadata']['name']
-
-    if cell.cell_type == 'code'
-      cell.collapsed = cell_hash['metadata']['collapsed']
-      cell.execution_count = cell_hash['execution_count']
-      cell.outputs = cell_hash['outputs']
-    end
-
-    cell
-  end
-
-  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
-
-  def self.to_s
-    self.class.to_s
-  end
-
-  attr_accessor :heading_level, :id, :execution_count, :collapsed, :outputs, :name
-
-  attr_reader :source, :tags, :cell_type
+  attr_reader :source,
+              :tags,
+              :cell_type
 
   def initialize(source: '',
                  cell_type: 'code',
@@ -63,8 +43,6 @@ class NotebookCell
     @cell_type = new_type
   end
 
-  # rubocop:disable Metrics/MethodLength
-
   def to_h
     hsh = { 'cell_type' => cell_type,
             'id' => id,
@@ -84,8 +62,7 @@ class NotebookCell
     hsh
   end
 
-  # rubocop:enable Metrics/MethodLength
-
+  # TODO: Move to separate class
   def generate_id
     Time.now.to_f.to_s.delete('.')
   end
@@ -113,9 +90,9 @@ class NotebookCell
     source == other.source
   end
 
-  def output_text
-    outputs.map do |output|
-      output['text'] || output['evalue']
-    end
-  end
+  # def output_text
+  #   outputs.map do |output|
+  #     output['text'] || output['evalue']
+  #   end
+  # end
 end

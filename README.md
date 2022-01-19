@@ -22,5 +22,6 @@ Notebook files are JSON dictionaries.
 - [x] rename `cell.hash` to `cell.to_h`
 - [/] `inspect` and `to_s` improvements
 
-0.3.x
-- [ ] Under the hood overhaul
+0.2.2 => jump to 0.3.0
+0.3.0
+- [X] Under the hood overhaul

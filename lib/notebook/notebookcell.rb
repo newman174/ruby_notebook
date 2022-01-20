@@ -1,50 +1,30 @@
 # frozen_string_literal: true
 
-# Cell for Jupyter Notebook
+require_relative 'nbtools'
+
+# Cells for Jupyter Notebooks
 class NotebookCell
-  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  GENERAL_CELL_ATTRIBUTES = [:heading_level, :id, :name,
+                             :source, :cell_type, :tags]
 
-  def self.open(cell_hash)
-    cell = new
+  attr_accessor :heading_level,
+                :id,
+                :name
 
-    cell.cell_type = cell_hash['cell_type']
-    cell.id = cell_hash['id']
-    cell.tags = cell_hash['metadata']['tags']
-    cell.heading_level = cell_hash['metadata']['heading_level']
-    cell.source = cell_hash['source']
-    cell.name = cell_hash['metadata']['name']
-
-    if cell.cell_type == 'code'
-      cell.collapsed = cell_hash['metadata']['collapsed']
-      cell.execution_count = cell_hash['execution_count']
-      cell.outputs = cell_hash['outputs']
-    end
-
-    cell
-  end
-
-  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
-
-  def self.to_s
-    self.class.to_s
-  end
-
-  attr_accessor :heading_level, :id, :execution_count, :collapsed, :outputs, :name
-
-  attr_reader :source, :tags, :cell_type
+  attr_reader :source,
+              :tags,
+              :cell_type
 
   def initialize(source: '',
-                 cell_type: 'code',
+                 cell_type: 'markdown',
                  heading_level: 0,
-                 tags: '')
+                 tags: 'default')
 
     self.source = source
     self.cell_type = cell_type
     self.heading_level = heading_level
     self.tags = tags
-    self.id = generate_id
-    self.execution_count = execution_count
-    self.outputs = []
+    self.id = NBTools.generate_id
     self.name = ''
   end
 
@@ -63,31 +43,15 @@ class NotebookCell
     @cell_type = new_type
   end
 
-  # rubocop:disable Metrics/MethodLength
-
   def to_h
-    hsh = { 'cell_type' => cell_type,
-            'id' => id,
-            'metadata' => {
-              'tags' => tags,
-              'heading_level' => heading_level,
-              'name' => name
-            },
-            'source' => source }
-
-    if cell_type == 'code'
-      hsh['metadata']['collapsed'] = collapsed
-      hsh['execution_count'] = execution_count
-      hsh['outputs'] = outputs
-    end
-
-    hsh
-  end
-
-  # rubocop:enable Metrics/MethodLength
-
-  def generate_id
-    Time.now.to_f.to_s.delete('.')
+    { 'cell_type' => cell_type,
+      'id' => id,
+      'metadata' => {
+        'tags' => tags,
+        'heading_level' => heading_level,
+        'name' => name
+      },
+      'source' => source }
   end
 
   # def inspect
@@ -112,10 +76,37 @@ class NotebookCell
   def ==(other)
     source == other.source
   end
+end
 
-  def output_text
-    outputs.map do |output|
-      output['text'] || output['evalue']
-    end
+class MarkdownCell < NotebookCell; end
+
+class CodeCell < NotebookCell
+  CODE_CELL_ATTRIBUTES = GENERAL_CELL_ATTRIBUTES +
+                         [:heading_level, :id, :name,
+                          :source, :cell_type, :tags]
+
+  attr_accessor :execution_count,
+                :collapsed,
+                :outputs
+
+  def initialize(source: '', tags: 'default')
+    super(source: source, heading_level: 0, tags: tags, cell_type: 'code')
+    self.execution_count = 0
+    self.outputs = []
+    self.collapsed = false
   end
+
+  def to_h
+    hsh = super
+    hsh['metadata']['collapsed'] = collapsed
+    hsh['execution_count'] = execution_count
+    hsh['outputs'] = outputs
+    hsh
+  end
+
+  # def output_text
+  #   outputs.map do |output|
+  #     output['text'] || output['evalue']
+  #   end
+  # end
 end

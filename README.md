@@ -81,6 +81,7 @@ Notebook files are JSON dictionaries.
 - [x] Split notebookcell class to code and markdown cell subclasses
 - [x] Move formatters to their own class
 - [x] Other minor refactoring
+- [x] Change required ruby version to >= 3.0.0
 
 **x.x.x**
 

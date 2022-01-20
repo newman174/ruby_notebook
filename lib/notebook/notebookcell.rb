@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-# Cells for Jupyter Notebooks
-
 require_relative 'nbtools'
 
+# Cells for Jupyter Notebooks
 class NotebookCell
+  GENERAL_CELL_ATTRIBUTES = [:heading_level, :id, :name,
+                             :source, :cell_type, :tags]
+
   attr_accessor :heading_level,
                 :id,
-                :execution_count,
-                :collapsed,
-                :outputs,
                 :name
 
   attr_reader :source,
@@ -17,17 +16,15 @@ class NotebookCell
               :cell_type
 
   def initialize(source: '',
-                 cell_type: 'code',
+                 cell_type: 'markdown',
                  heading_level: 0,
-                 tags: '')
+                 tags: 'default')
 
     self.source = source
     self.cell_type = cell_type
     self.heading_level = heading_level
     self.tags = tags
     self.id = NBTools.generate_id
-    self.execution_count = execution_count
-    self.outputs = []
     self.name = ''
   end
 
@@ -47,22 +44,14 @@ class NotebookCell
   end
 
   def to_h
-    hsh = { 'cell_type' => cell_type,
-            'id' => id,
-            'metadata' => {
-              'tags' => tags,
-              'heading_level' => heading_level,
-              'name' => name
-            },
-            'source' => source }
-
-    if cell_type == 'code'
-      hsh['metadata']['collapsed'] = collapsed
-      hsh['execution_count'] = execution_count
-      hsh['outputs'] = outputs
-    end
-
-    hsh
+    { 'cell_type' => cell_type,
+      'id' => id,
+      'metadata' => {
+        'tags' => tags,
+        'heading_level' => heading_level,
+        'name' => name
+      },
+      'source' => source }
   end
 
   # def inspect
@@ -86,6 +75,33 @@ class NotebookCell
 
   def ==(other)
     source == other.source
+  end
+end
+
+class MarkdownCell < NotebookCell; end
+
+class CodeCell < NotebookCell
+  CODE_CELL_ATTRIBUTES = GENERAL_CELL_ATTRIBUTES +
+                         [:heading_level, :id, :name,
+                          :source, :cell_type, :tags]
+
+  attr_accessor :execution_count,
+                :collapsed,
+                :outputs
+
+  def initialize(source: '', tags: 'default')
+    super(source: source, heading_level: 0, tags: tags, cell_type: 'code')
+    self.execution_count = 0
+    self.outputs = []
+    self.collapsed = false
+  end
+
+  def to_h
+    hsh = super
+    hsh['metadata']['collapsed'] = collapsed
+    hsh['execution_count'] = execution_count
+    hsh['outputs'] = outputs
+    hsh
   end
 
   # def output_text
